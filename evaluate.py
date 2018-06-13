@@ -119,11 +119,11 @@ class evaluator :
 		count=0
 		for sim,x_,y_ in zip(sim_matrix[x,y],x,y):
 			if sim >=0.85:
-				'''
+				
 				print(target_l[x_])
 				print(predict_l[y_])
 				print('------'+'\n')
-				'''
+				
 				count+=1
 
 		return count,len(predict_l),len(target_l)

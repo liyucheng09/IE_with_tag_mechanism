@@ -30,11 +30,32 @@ class fact:
 			return False
 
 	def calculate_distance(self,posi):
+		'''
+			This function return always be positive.
+
+		'''
+
 		if posi[1]<=self.predict_position[0]:
 			return self.predict_position[0]-posi[1]
 		else:
 			assert posi[0]>=self.predict_position[1]
 			return posi[0]-self.predict_position[1]
+
+	def calculate_distance_relative(self,posi):
+
+		if posi[1]<=self.predict_position[0]:
+			if posi[1]==self.predict_position[0]:
+				return -1
+			else:
+				return posi[1]-self.predict_position[0]
+		elif posi[0]>=self.predict_position[1]:
+			if posi[0]==self.predict_position[1]:
+				return 1
+			else:
+				return posi[0]-self.predict_position[1]
+		elif posi[0]==self.predict_position[0] \
+			and posi[1]==self.predict_position[1]:
+			return 0
 
 
 class grouper :
@@ -51,24 +72,27 @@ class grouper :
 
 		predict_char_l=[sentence[predict[1][0]:predict[1][1]] \
 									for predict in predict_tag_l]
-
+#		print(predict_char_l)
 		for index,predict in enumerate(predict_tag_l):
 			subtag=predict[0]
+			predict_char=predict_char_l[index]
+#			print(subtag)
 			if 'O' in subtag:
 				pattern2=re.compile('O*')
 				for index2,obj in enumerate(\
 							[i for i in pattern2.finditer(subtag) if i.group()]):
 #					print(subtag,obj.group())
 					obj_char=predict_char_l[index][obj.span()[0]:obj.span()[1]]
-					predict_char_l[index]=\
-						predict_char_l[index].replace(\
+#					print(obj_char,obj.span()[0],obj.span()[1],predict_char_l[index],predict_char_l[index][obj.span()[0]:obj.span()[1]])
+					predict_char=predict_char.replace(\
 							obj_char,place_hodler_l[index2])
-			predict_char_l[index]=(predict_char_l[index],predict[1])
+			predict_char_l[index]=(predict_char,predict[1])
+#		print(predict_char_l)
 		return predict_char_l
 
 	def _subsentences(self):
 
-		subsentences=re.split(',.!?，。！？',self.sentence)
+		subsentences=re.split(',|\.|!|\?|，|。|！|？',self.sentence)
 		result=[]
 		for subsentence in subsentences:
 			s=self.sentence.find(subsentence)
@@ -84,13 +108,63 @@ class grouper :
 		return [[self.sentence[i.span()[0]:i.span()[1]],i.span()] for i in pattern.finditer(self.tag) if i.group()]
 
 
+	def _find_next_predicate(self,fact__):
+
+		distance_l=[fact__.calculate_distance_relative(fact_.predict_position)\
+			if fact__.calculate_distance_relative(fact_.predict_position)>0 \
+			else np.inf for fact_ in self.facts]
+
+		distance_l = np.array(distance_l)
+		if (np.logical_and(distance_l>0,\
+					distance_l!=np.inf)).any():
+			most_close_predict=np.argmin(distance_l)
+			return self.facts[most_close_predict]
+		return False
+
+	def _if_posi_in_interval(self,posi1,posi2,posi3):
+
+		if posi3[0]>=posi1[1] and posi3[1]<=posi2[0]:
+			return True
+		else:
+			return False
+
+	def _select_object_2(self,obj_l,sub_l):
+
+		for fact_ in self.facts:
+			for obj in obj_l:
+				if fact_.is_in_predict(obj[1]):
+					fact_.object.append(obj[0])
+					
+			next_p=self._find_next_predicate(fact_)
+
+			if next_p:
+				next_p=next_p.predict_position
+			else:
+				next_p=(len(self.sentence),len(self.sentence))
+
+			for obj in obj_l:
+				if self._if_posi_in_interval(fact_.predict_position,\
+						next_p,obj[1]):
+					fact_.object.append(obj[0])
+
+			if len(fact_.object)==0:
+
+				for sub in sub_l:
+					if self._if_posi_in_interval(fact_.predict_position,\
+						next_p,sub[1]):
+						fact_.object.append(sub[0])
+
+
+
 	def _select_object(self,obj_l):
 
+		'''
 		#  As for each predict 
 		#  we select object which is already contain in predict 
 		#  where placeholder is.
 		#  And for each predict which has no object already, we choice
 		#  the most close object for him.
+		'''
 
 		flag=[0 for obj in obj_l]
 		for fact_ in self.facts:
@@ -103,7 +177,7 @@ class grouper :
 
 				most_close_obj=obj_l[np.argmin(distance_l)]
 				fact_.object.append(most_close_obj[0])
-				flag[most_close_obj]=1
+				flag[obj_l.index(most_close_obj)]=1
 
 
 
@@ -118,6 +192,7 @@ class grouper :
 
 	def _select_object_with_delete(self,obj_l):
 
+		'''
 		#  As for each predict 
 		#  we select object which is already contain in predict 
 		#  where placeholder is.
@@ -128,6 +203,7 @@ class grouper :
 		#  The difference between this function and '_select_object'
 		#  is this function will delete obj when he was chosen by 
 		#  one predict.
+		'''
 
 		for fact_ in self.facts:
 			for obj in obj_l:
@@ -164,10 +240,29 @@ class grouper :
 				else:
 					self.facts[most_close_predict].qualifier=item[0]
 
+	def _select_subject_2(self,sub_l):
+
+		for fact_ in self.facts:
+			distance_l=[fact_.calculate_distance_relative(subject[1]) \
+					if fact_.calculate_distance_relative(subject[1])<0\
+					else -np.inf for subject in sub_l]
+			distance_l=np.array(distance_l)
+			if (np.logical_and(distance_l<0,distance_l!=-np.inf)).any():
+				most_close_subject=np.argmax(distance_l)
+				fact_.subject.append(sub_l[most_close_subject][0])
+
 	def _select_subject(self,sub_l):
 
-		#  Delete after subject was chosen by a fact
-		#
+		'''
+			This method is the first version algorithm subject grouping.
+
+
+			We will judge each subject and each fact whether they
+			are in the same subsentence, if they are we will group this
+			subject and fact.
+
+			Delete after subject was chosen by a fact
+		'''
 
 		subsentences=self._subsentences()
 		flag=[0 for i in sub_l]
@@ -185,10 +280,12 @@ class grouper :
 				fact_.subject.append(candidate[most_close_subject][0])
 				flag[sub_l.index(candidate[most_close_subject])]=1
 
+		'''
 		#  After the first round of matching, the rest of subject
 		#  (which not be used already)
 		#  will find the most close predict and be grouped together.
 		#
+		'''
 
 		rest_of_subject=[subject for index,subject in enumerate(sub_l) if flag[index]!=1]
 		if len(rest_of_subject)!=0 :
@@ -212,17 +309,26 @@ class grouper :
 		for fact_,fact_position in self._generate_predict(self.sentence,self.tag):
 			self.facts.append(fact(fact_,fact_position))
 
+		if len(self.facts)==0:
+			return
+
 		obj_l=self._find_section_in_sentence('O')
-		self._select_object(obj_l)
+		sub_l=self._find_section_in_sentence('S')
+		self._select_object_2(obj_l,sub_l)
+#		self._select_object(obj_l)
 
 		self._select_place_time_qualifier()
 
-		sub_l=self._find_section_in_sentence('S')
-		self._select_subject(sub_l)
+		self._select_subject_2(sub_l)
+#		self._select_subject(sub_l)
 
 	def print(self):
 
 		pprint(self.sentence)
+
+		if len(self.facts)==0:
+			print('Can\'t extract information from this sentence -,- !')
+
 		for i in self.facts:
 			pprint([
 				i.subject,
@@ -235,27 +341,33 @@ class grouper :
 	def output(self):
 
 		result=[]
+
 		for fact_ in self.facts:
 
-			fact_l=[i if i!=None else '_' for i in [fact_.subject,fact_.predict,\
+			fact_l=['_' if i==None or len(i)==0 else i for i in [fact_.subject,fact_.predict,\
 					fact_.object,fact_.time,fact_.place,fact_.qualifier]]
 
 			result.append(
 				{
 					'subject':fact_l[0],
-					'predict':fact_l[1],
+					'predicate':fact_l[1],
 					'object':fact_l[2],
 					'time':fact_l[3],
 					'place':fact_l[4],
 					'qualifier':fact_l[5]
 				})
-
-		return json.dumps(result,ensure_ascii=False),len(result)
+		return result,len(result)
 
 def formatter(old_tag):
 
 	'''
 		Replace tag 'NA' with 'N', 'PL' with 'L'.
+
+		argument:
+			old_tag: tag list.
+
+		return:
+			tag: tag string.
 
 	'''
 
@@ -268,10 +380,8 @@ def formatter(old_tag):
 			tag_new.append('L')
 			continue
 		tag_new.append(item)
-
 	tag=''.join(tag_new)
 	del old_tag,tag_new
-
 	return tag
 
 
@@ -326,7 +436,7 @@ if __name__ == '__main__':
 
 	with open(args.result_path,'w',encoding='utf-8') as f:
 		for fact_ in result:
-			f.write(fact_+'\n')
+			f.write(json.dumps(fact_,ensure_ascii=False)+'\n')
 
 	print('%d facts were found in %d sentences! \n \
 			The result save at %s.'  %(all_count,len(sentences),args.result_path))

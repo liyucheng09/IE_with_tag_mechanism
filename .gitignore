@@ -1,0 +1,10 @@
+dltk/__pycache__/
+__pycache__
+*.txt
+*.json
+*.pickle
+.DS_Store
+evaluate1.py
+evaluate2.py
+test_model.py
+Evaluation.py
