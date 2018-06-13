@@ -25,12 +25,16 @@ def ie():
 
 def get_ie(sentence):
 
-	tag=predict(sentence)
+	tag=predict([sentence])
 
 	g.sentence=sentence
-	g.tag=tag
+	g.tag=tag[0]
 
 	g.group()
 	r , _ =g.output()
 
 	return r
+
+if __name__ == '__main__':
+
+	manager.run()
