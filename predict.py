@@ -13,6 +13,7 @@ model=dltk.load_model(map_file=map_file,model_file=model_file)
 def predict(sentences):
 
 	tags=model.predict(sentences)
+	
 	tags=[formatter(tag) for tag in tags]
 
 	return tags
