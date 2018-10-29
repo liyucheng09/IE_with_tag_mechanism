@@ -1,5 +1,6 @@
 dltk/__pycache__/
 __pycache__
+ie/
 *.txt
 *.json
 *.pickle

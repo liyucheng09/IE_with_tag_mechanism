@@ -384,6 +384,23 @@ def formatter(old_tag):
 	del old_tag,tag_new
 	return tag
 
+def extract(sentences,tags,result):
+
+	g=grouper()
+
+	for sentence,tag in zip(sentences,tags):
+
+		tag=formatter(tag)
+
+		g.sentence=sentence
+		g.tag=tag
+
+#		print(g.sentence,g.tag)
+		g.group()
+
+		r,count=g.output()
+		result.append(r)
+
 
 if __name__ == '__main__':
 
@@ -433,7 +450,7 @@ if __name__ == '__main__':
 		r,count=g.output()
 		all_count+=count
 		result.append(r)
-
+	
 	with open(args.result_path,'w',encoding='utf-8') as f:
 		for fact_ in result:
 			f.write(json.dumps(fact_,ensure_ascii=False)+'\n')
