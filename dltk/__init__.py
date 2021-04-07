@@ -9,7 +9,7 @@ from collections import defaultdict
 
 from dltk import lexical
 from dltk import dictionary
-from  dltk import model
+from dltk import model
 
 LEXICAL_ANALYSER = lexical.LexicalAnalyzer()
 _DICTIONARY = dictionary.Dictionary()
