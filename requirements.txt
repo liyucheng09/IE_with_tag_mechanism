@@ -68,7 +68,7 @@ pickleshare @ file:///home/conda/feedstock_root/build_artifacts/pickleshare_1602
 Pillow @ file:///D:/bld/pillow_1612816869722/work
 prometheus-client @ file:///home/conda/feedstock_root/build_artifacts/prometheus_client_1605543085815/work
 prompt-toolkit @ file:///home/conda/feedstock_root/build_artifacts/prompt-toolkit_1613068548426/work
-protobuf==3.14.0
+protobuf==3.18.3
 pyarrow==3.0.0
 pycparser @ file:///home/conda/feedstock_root/build_artifacts/pycparser_1593275161868/work
 pydeck @ file:///home/conda/feedstock_root/build_artifacts/pydeck_1613160070169/work
