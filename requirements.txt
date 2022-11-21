@@ -90,7 +90,7 @@ six @ file:///home/conda/feedstock_root/build_artifacts/six_1590081179328/work
 smmap @ file:///home/conda/feedstock_root/build_artifacts/smmap_1611376390914/work
 streamlit @ file:///home/conda/feedstock_root/build_artifacts/streamlit_1612481210995/work
 tensorboard==1.15.0
-tensorflow==1.15.0
+tensorflow==2.9.3
 tensorflow-estimator==1.15.1
 termcolor==1.1.0
 terminado @ file:///D:/bld/terminado_1609794338660/work
