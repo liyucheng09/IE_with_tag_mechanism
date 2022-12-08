@@ -15,7 +15,7 @@ botocore @ file:///home/conda/feedstock_root/build_artifacts/botocore_1613520589
 brotlipy==0.7.0
 cached-property==1.5.2
 cachetools @ file:///home/conda/feedstock_root/build_artifacts/cachetools_1611555765219/work
-certifi==2020.12.5
+certifi==2022.12.7
 cffi @ file:///D:/bld/cffi_1613414034267/work
 chardet @ file:///D:/bld/chardet_1610093644405/work
 click==7.1.2
